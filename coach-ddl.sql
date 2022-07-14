@@ -57,7 +57,7 @@ insert into locations (name, address) values
 insert into students(name,date_of_birth,parent_id) values ("Cindy Tan","2020-06-11",4);
 update students set parent_id=4 where student_id =1;
 
--- # sql will block it because existing data will cease to be invalid if this is deleted/updated
+-- # sql will block the following commands because existing data will become invalid if this is deleted/updated
     -- delete from parents where parent_id=4;
     -- update students set parent_id=9 where student_id =1;
 
@@ -74,6 +74,7 @@ create table sessions (
 
     -- to delete, in terminal: delete from parents where parent_id=2;
     -- to show table, in terminal: select * from parents
+    -- * means all columns
     -- to show table fields, in terminal: describe locations;
     -- in terminal: show table
     -- in terminal: exit
