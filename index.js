@@ -50,18 +50,23 @@ async function main(){
         // define the 'get all results query'
         // 1 means true
         let query = "Select * from actor WHERE 1";
-        
+        let bindings = []
+
         // if req.query is not falsy
         // undefined,null,"",0 --> falsy value
         if (req.query.first_name){
-            query += ` AND first_name LIKE '%${req.query.first_name}%'`
+            query += ` AND first_name LIKE ?`;
+            // ? tells SQL to treat it as a string after the ? is replaced
+            bindings.push('%' + req.query.first_name + '%')
         }
         if(req.query.last_name){
-            query += ` AND last_name LIKE '%${req.query.last_name}%'`
+            query += ` AND last_name LIKE ?`;
+            bindings.push('%' + req.query.last_name + '%')
         }
-        console.log(query)
+        console.log(query,bindings)
+        // 3 types of cyber security attacks : sql injections, xss (cross site scripting), csrf(cross server request forgery)
 
-        let [actors] = await connection.execute(query);
+        let [actors] = await connection.execute(query,bindings);
         res.render('search',{
             'actors':actors
         })
