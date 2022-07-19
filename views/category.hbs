@@ -1,0 +1,36 @@
+{{#extends 'base'}}
+    {{#block 'content'}}
+        <a class="btn btn-primary" class="form-control" href="/category/create">Create</a>
+        
+        <form method="GET">
+            <div>
+                <label>Search:</label>
+                <input type="text" class="form-control" name="name"/>
+                <input type="submit" class="btn btn-primary"/>
+            </div>
+            <label>Sort by:</label>
+            <select>
+                <option name="nameOrder">Name Ascending</option>
+                <option name="nameOrder">Name Descending</option>
+            </select>
+        </form>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Category ID</th>
+                    <th>Category Name</th>
+                </tr>
+            </thead>
+            {{#each category}}
+                <tr>
+                    <td>{{this.category_id}}</td>
+                    <td>{{this.name}}</td>
+                    <td><a class="btn btn-primary"
+                        href="/category/{{this.category_id}}/update">Update</a></td>
+                    <td><a class="btn btn-danger"
+                        href="/category/{{this.category_id}}/delete">Delete</a></td>
+                </tr>
+            {{/each}}
+        </table>
+    {{/block}}
+{{/extends}}

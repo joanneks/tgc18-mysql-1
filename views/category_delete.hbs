@@ -1,0 +1,26 @@
+{{#extends 'base'}}  
+    {{#block 'content'}}
+        <form method="POST">
+            <div>
+            
+                <div class="alert alert-danger">Are you sure you want to delete this entry?</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td>Category ID: </td>
+                            <td>Category Name: </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{this.category.category_id}}</td>
+                            <td>{{this.category.name}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-danger">Delete</button>
+            <a href="/category" class="btn btn-warning">Cancel</a>
+        </form>
+    {{/block}}
+{{/extends}}
