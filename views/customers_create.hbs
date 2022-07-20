@@ -1,0 +1,47 @@
+{{#extends 'base'}}
+{{#block 'content'}}
+<form method="POST">
+    <div>
+        <label>First Name</label>
+        <input type="text" class="form-control" name="first_name"/>
+    </div>
+    <div>
+        <label>Last Name</label>
+        <input type="text" class="form-control" name="last_name"/>
+    </div>
+    <div>
+        <label>Email</label>
+        <input type="text" class="form-control" name="email"/>
+    </div>
+    <div>
+        <label>Address</label>
+        <input type="text" class="form-control" name="address"/>
+    </div>
+    <div>
+        <label>District:</label>
+        <input type="text" class="form-control" name="district"/>
+    </div>
+    <div>
+        <label>Phone Number:</label>
+        <input type="text" class="form-control" name="phone"/>
+    </div>
+    <div>
+        <label>Store ID</label>
+        <select name="store_id" class="form-control">
+            {{#each store}}
+                <option value="{{this.store_id}}">{{this.address}}</option>
+            {{/each}}
+        </select>
+    </div>
+    <div>
+        <label>City</label>
+        <select name="city_id" class="form-control">
+            {{#each city}}
+                <option  value="{{this.city_id}}">{{this.city}}</option>
+            {{/each}}
+        </select>
+    </div>
+    <button class="btn btn-primary""">Submit</button>
+</form>
+{{/block}}
+{{/extends}}

@@ -211,16 +211,6 @@ async function main(){
         res.redirect('/category');
     })
 
-    
-    app.get('/films/create', async function (req, res) {
-        const [languages] = await connection.execute(
-            "SELECT * FROM language"
-        );
-
-        res.render('create_film', {
-            languages: languages
-        })
-    })
 
     
     app.get('/categories/:category_id/delete', async function (req, res) {
@@ -250,31 +240,66 @@ async function main(){
             "SELECT * FROM language"
         );
 
+        const [actors] = await connection.execute(
+            "SELECT * FROM actor"
+        );
+
         res.render('create_film', {
-            languages: languages
+            languages: languages,
+            actors: actors
         })
     })
+
 
     app.get('/films', async function (req, res) {
         const [films] = await connection.execute(`SELECT film_id, title, description, language.name AS 'language' FROM film 
                                                   JOIN language 
                                                   ON film.language_id = language.language_id`);
 
-        console.log(films);
+        // console.log(films);
         res.render('films', {
             films: films
         })
     })
 
     app.post('/films/create', async function (req, res) {
+        // console.log(req.body.actors);
+        let actors = req.body.actors ? req.body.actors : [];
+        actors = Array.isArray(actors) ? actors : [actors];
+
+        // nested ternary expression
+        // let actors =req.body.actors?
+        // (Array.isArray(req.body.actors)?req.body.actors : [req.body.actors]):[];
         /*
         insert into film (title, description, language_id)
                values ("The Lord of the Ring", "blah blah blah", 1);
         */
-        await connection.execute(
-            `insert into film (title, description, language_id) values (?, ?, ?)`,
-            [req.body.title, req.body.description, parseInt(req.body.language_id), ]
-        );
+    //    1. we have to create the row first
+    const [results] = await connection.execute(
+        `insert into film (title,description, language_id) values (?,?,?)`,
+        [req.body.title,req.body.description,req.body.language_id]
+    );
+    const newFilmId = results.insertId
+
+    // 2. then add in relationship in the pivot table
+    // sample query
+    // insert into film_actor (actor_id,film_id) values (2,1002))
+    // for (let actorId of actors){
+    //     const bindings = [actorId,newFilmId];
+    //     await connection.execute(`insert into film_actor (actor_id, film_id) values (?,?)`,bindings)
+    // }
+        let query = "INSERT INTO film_actor (actor_id,film_id) values "
+        const bindings = []
+        for (let actorId of actors){
+            query += "(?,?),"
+            bindings.push(actorId,newFilmId)
+        }
+        query = query.slice(0,-1) //omit the last comma
+        await connection.execute(query,bindings)
+        // await connection.execute(
+        //     `insert into film (title, description, language_id) values (?, ?, ?)`,
+        //     [req.body.title, req.body.description, parseInt(req.body.language_id), ]
+        // );
         res.redirect('/films');
     })
 
@@ -282,10 +307,17 @@ async function main(){
         const [languages] = await connection.execute("SELECT * from language");
         const [films] = await connection.execute("SELECT * from film where film_id = ?",
             [parseInt(req.params.film_id)]);
+        const [actors] = await connection.execute("SELECT * from actor");
+        const [currentActors] = await connection.execute("SELECT actor_id from film_actor where film_id = ?",[req.params.film_id])
+        const currentActorIds = currentActors.map(a => a.actor_id);
+        // console.log(currentActorIds);
+        
         const filmToUpdate = films[0];
         res.render('update_film',{
             'film':filmToUpdate,
-            'languages':languages
+            'languages':languages,
+            'actors': actors,
+            'currentActors': currentActorIds
         })
 
     })
@@ -305,8 +337,60 @@ async function main(){
                          WHERE film_id=?`,
         [req.body.title, req.body.description, parseInt(req.body.language_id), req.params.film_id]
        );
+
+    //    update actors
+    await connection.execute("DELETE from film_actor where film_id =?",[req.params.film_id]);
+
+    // second re-add all the selected actors back to the film
+    let actors = req.body.actors? req.body.actors : [];
+    actors =Array.isArray(actors)? actors: [actors];
+    for (let actorId of actors){
+        await connection.execute("INSERT INTO film_actor (film_id,actor_id) values (?,?)",[
+            parseInt(req.params.film_id),
+            actorId
+        ])
+    }
+
        res.redirect('/films');
     })
+
+app.get('/customers',async function (req,res){
+    let [store] = await connection.execute ("SELECT store.store_id, address.address from store JOIN address on store.address_id = address.address_id")
+    let [customers] = await connection.execute("SELECT * from customer")
+    res.render('customers',{
+        customers
+    })
+})
+app.get('/customers/create',async function(req,res){
+    let [store] = await connection.execute ("SELECT * from store JOIN address on store.address_id = address.address_id")
+    let [address] = await connection.execute ("SELECT * from address")
+    let [city] = await connection.execute("SELECT * from city")
+    res.render('customers_create',{
+        store,
+        address,
+        city
+    })
+})
+app.post('/customers/create', async function(req,res){
+    // await connection.execute("START TRANSACTION")
+    // try{
+        let [newAddress] = await connection.execute(`INSERT INTO address (address,district,city_id,phone,location) values (?,?,?,?,POINT(0.0000,90.0000))`,
+                                                    [req.body.address,req.body.district,req.body.city_id,req.body.phone])
+        newAddressId = newAddress.insertId
+        let query ="INSERT INTO customer (first_name,last_name,email,address_id,store_id) values (?,?,?,?,?)"
+        let bindings = [req.body.first_name,
+            req.body.last_name,req.body.email,newAddressId,req.body.store_id]
+        let newCustomer = await 
+            connection.execute(query,bindings)
+        res.redirect('/customers');
+
+    // }catch(e){
+    //     await connection.execute("ROLLBACK");
+    //     console.log(e);
+    // }
+})
+
+
 };
 
 main();
